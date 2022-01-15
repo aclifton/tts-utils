@@ -1,7 +1,9 @@
 local DeckUtils = {}
 
-function DeckUtils.getDeckOrCardFromZone(zone_guid)
-    local zone = getObjectFromGUID(zone_guid)
+function DeckUtils.getDeckOrCardFromZone(zone)
+    if type(zone) == "string" then
+        zone = getObjectFromGUID(zone)
+    end
     if zone == nil then return nil end
     for _, obj in ipairs(zone.getObjects()) do
         if obj.type == "Deck" then
