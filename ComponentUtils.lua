@@ -15,12 +15,15 @@ function ComponentUtils.arrange(params)
     }
     for k,v in pairs(params) do values[k] = v end
     if #values.items == 0 then return end
-    -- if values.cols == 0 and values.rows == 0 then
-    --     local sqrtItems = math.ceil(math.sqrt(#values.items))
-    --     values.rows = sqrtItems
-    --     if values.rows == 0 then values.rows = 1 end
-    --     values.cols = math.ceil(#values.items/values.rows)        
-    -- end
+    if values.cols == 0 and values.rows == 0 then
+        values.rows = math.ceil(math.sqrt(#values.items))
+    end
+    if values.cols == 0 then
+        values.cols = math.ceil(#values.items/values.rows)
+    elseif values.rows == 0 then
+        values.rows = math.ceil(#values.items/values.cols)
+    end
+
     if type(values.padding) ~= "table" then
         values.padding = {values.padding, values.padding, values.padding}
     end
@@ -33,7 +36,6 @@ function ComponentUtils.arrange(params)
         item.setRotation(values.rotation)
         max_item_bounds = Vector.max(max_item_bounds, item.getBounds().size)
     end
-    max_item_bounds.y = 0
     local first_position = position
     if values.alignment == "center" then
         local originOffset = Vector(
@@ -69,6 +71,38 @@ function ComponentUtils.arrange(params)
             item.setPosition(current)
         end
     end    
+end
+
+function ComponentUtils.getObjectsAboveRectangularObject(params)
+    local values = {
+        height = 1,
+        debug = false,
+    }
+    for k,v in pairs(params) do values[k] = v end
+    local obj = getObjectFromGUID(values.obj)
+    if obj == nil then error("obj cannot be nil") end
+    local position = obj.getPosition()
+    local objSize = obj.getBoundsNormalized().size
+    local rotation = obj.getRotation()
+    local hits = Physics.cast({
+        origin       = position,
+        direction    = {0, 1, 0},
+        type         = 3,-- int (1: Ray, 2: Sphere, 3: Box),
+        size         = objSize,
+        orientation  = rotation,
+        max_distance = values.height,
+        debug        = values.debug,
+    }) -- returns {{Vector point, Vector normal, float distance, Object hit_object}, ...}
+    local uniqueObjects = {}
+    for _, hit in ipairs(hits) do
+        local hitObject = hit.hit_object
+        if hitObject.getGUID() ~= nil and hitObject.getGUID() ~= params.obj then
+            uniqueObjects[hitObject.getGUID()] = hitObject
+        end
+    end
+    local objects = {}
+    for _, object in pairs(uniqueObjects) do table.insert(objects, object) end
+    return objects
 end
 
 return ComponentUtils
