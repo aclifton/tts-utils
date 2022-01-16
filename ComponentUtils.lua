@@ -105,4 +105,42 @@ function ComponentUtils.getObjectsAboveRectangularObject(params)
     return objects
 end
 
+function ComponentUtils.getObjectsAboveRegualarHexagonalObject(params)
+    local values = {
+        height = 1,
+        debug = false,
+    }
+    for k,v in pairs(params) do values[k] = v end
+    local obj = getObjectFromGUID(values.obj)
+    if obj == nil then error("obj cannot be nil") end
+    local position = obj.getPosition()
+    local objSize = obj.getBoundsNormalized().size
+    local rotation = obj.getRotation()    
+    local uniqueObjects = {}
+
+    for r=30,180,60 do
+        local rotation = obj.getRotation()
+        rotation.y = rotation.y + r
+        local hits = Physics.cast({
+            origin = obj.getPosition(),
+            type = 3,
+            direction = {0,1,0},
+            max_distance = values.height,
+            size = {objSize.x * math.sqrt(3)/2, objSize.y, objSize.x/2},
+            orientation = rotation,
+            debug = values.debug,
+        })
+        for _, hit in ipairs(hits) do
+            local hitObject = hit.hit_object
+            if hitObject.getGUID() ~= nil and hitObject.getGUID() ~= params.obj then
+                uniqueObjects[hitObject.getGUID()] = hitObject
+            end
+        end
+    end
+
+    local objects = {}
+    for _, object in pairs(uniqueObjects) do table.insert(objects, object) end
+    return objects
+end
+
 return ComponentUtils
