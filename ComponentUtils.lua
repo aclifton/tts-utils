@@ -1,5 +1,13 @@
 local ComponentUtils = {}
 
+function ComponentUtils.getObjectSizeHack(obj)
+    if obj.type == "Tile" then
+        return obj.getScale():scale(Vector(2,1,2))
+    else
+        return obj.getBounds().size
+    end
+end
+
 function ComponentUtils.arrange(params)
     values = {
         items = {},
@@ -34,7 +42,7 @@ function ComponentUtils.arrange(params)
     local cols = values.cols    
     for _, item in ipairs(values.items) do
         item.setRotation(values.rotation)
-        max_item_bounds = Vector.max(max_item_bounds, item.getBounds().size)
+        max_item_bounds = Vector.max(max_item_bounds, ComponentUtils.getObjectSizeHack(item))
     end
     local first_position = position
     if values.alignment == "center" then
